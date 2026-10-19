@@ -1,0 +1,9 @@
+import {useEffect,useRef} from 'react';import L from 'leaflet';import 'leaflet/dist/leaflet.css';import {atlasPlaces} from '../data/atlas';
+export default function Workshop({selectedLocation,selectLocation,openSource}:{selectedLocation:string|null;selectLocation:(id:string)=>void;openSource:(location_id:string,source_id:string)=>void}){
+ const el=useRef<HTMLDivElement>(null);const onSelect=useRef(selectLocation);onSelect.current=selectLocation;
+ useEffect(()=>{if(!el.current)return;const map=L.map(el.current,{zoomControl:true,attributionControl:false,scrollWheelZoom:false}).setView([0,0],2);
+ L.rectangle([[-20,-30],[20,30]],{color:'#8fae96',weight:1,fillOpacity:0.08}).addTo(map);
+ atlasPlaces.forEach(p=>{const marker=L.circleMarker([p.lat,p.lng],{radius:9,color:'#d5b77a',fillColor:'#d5b77a',fillOpacity:1}).addTo(map);marker.bindTooltip(p.name);marker.on('click',()=>onSelect.current(p.location_id));});
+ const handle=setTimeout(()=>map.invalidateSize(),0);return()=>{clearTimeout(handle);map.remove();};},[]);
+ return <section><div className="eyebrow">WORKSHOP / ATLAS</div><h1>Istraži svijet</h1><p className="muted">Ovo je shematski TEST prikaz, ne geografska karta kanona.</p><div ref={el} className="atlas" aria-label="Shematski Atlas"/><div className="panel"><h2>Lokacije</h2>{atlasPlaces.map(p=><div key={p.location_id} className="place"><div><strong>{p.name}</strong><p className="muted">{p.note}</p><p className="muted">location_id: {p.location_id}<br/>Status: {p.kind}<br/>source_id: {p.source_id??'(nema)'}</p></div><div className="place-actions"><button onClick={()=>selectLocation(p.location_id)} aria-pressed={selectedLocation===p.location_id}>{selectedLocation===p.location_id?'Odabrano ✓':'Odaberi'}</button>{p.source_id?<button onClick={()=>openSource(p.location_id,p.source_id!)}>Otvori izvor →</button>:<span className="tag">NEMA IZVORA</span>}</div></div>)}</div></section>;
+}

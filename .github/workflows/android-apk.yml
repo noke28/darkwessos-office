@@ -1,0 +1,37 @@
+name: DARKWESSOS Android debug APK
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+      # Bootstrap Capacitor without changing the existing lockfile. Pin versions for repeatability.
+      # For a production workflow, commit Capacitor dependencies and native android/ directory.
+      - run: npm install --no-save --package-lock=false @capacitor/core@7.4.4 @capacitor/cli@7.4.4 @capacitor/android@7.4.4
+      - run: npx cap add android
+      - run: npx cap sync android
+      - name: Build unsigned debug APK
+        run: bash gradlew assembleDebug --no-daemon
+        working-directory: android
+      - uses: actions/upload-artifact@v4
+        with:
+          name: darkwessos-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
