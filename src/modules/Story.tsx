@@ -2,6 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {initialManuscript,listRevisions,loadManuscript,saveManuscript,loadSyncCheckpoint,saveSyncCheckpoint} from '../lib/manuscriptStore';
 import {storyApi,StoryApiError} from '../lib/storyApi';
 import {createOperationId} from '../lib/operationId';
+import {cloudConfigured,currentUser,signIn,signUp,signOut,getRemote,createRemote,updateRemote} from '../lib/supabaseStory';
 import type {ManuscriptRevision} from '../lib/manuscriptStore';
 type SaveState='učitavanje'|'lokalno sačuvano'|'nespremljene izmjene'|'spremanje'|'greška';
 function downloadMarkdown(title:string,body:string){
@@ -20,6 +21,10 @@ export default function Story(){
   const [showHistory,setShowHistory]=useState(false);
   const cloudSyncEnabled=import.meta.env.VITE_STORY_API_ENABLED==='true';
   const [password,setPassword]=useState('');
+  const [email,setEmail]=useState('');
+  const [cloudUser,setCloudUser]=useState(currentUser());
+  const [cloudBusy,setCloudBusy]=useState(false);
+  const [cloudMessage,setCloudMessage]=useState('');
   const [serverStatus,setServerStatus]=useState('nije povezano');
   const [serverError,setServerError]=useState('');
   const [remoteConflict,setRemoteConflict]=useState(false);
@@ -94,6 +99,29 @@ export default function Story(){
       setServerError(e instanceof Error?e.message:String(e));
     }
   }
+  async function cloudLogin(register:boolean){setCloudBusy(true);setCloudMessage('');try{if(register){const active=await signUp(email,password);setCloudMessage(active?'Račun kreiran i prijavljen.':'Provjeri e-mail i potvrdi račun prije prijave.');}else{await signIn(email,password);setCloudMessage('Prijava uspješna.');}setCloudUser(currentUser());setPassword('');}catch(e){setCloudMessage(String(e));}finally{setCloudBusy(false);}}
+  async function cloudSync(){
+    if(!ready||status!=='lokalno sačuvano'){setCloudMessage('Prvo spremi lokalni tekst.');return;}
+    setCloudBusy(true);setCloudMessage('Provjeravam cloud verziju…');
+    try{
+      const local=await loadManuscript();const remote=await getRemote();const owner=currentUser()?.id;
+      if(!owner)throw new Error('Prijava je istekla.');
+      const key='darkwessos-cloud-checkpoint:'+owner;
+      const checkpoint=JSON.parse(localStorage.getItem(key)||'null') as {id:string;revision:number;title:string;content:string}|null;
+      if(!remote){
+        if(checkpoint)throw new Error('Raniji cloud dokument nije pronađen. Automatsko kreiranje je zaustavljeno.');
+        const saved=await createRemote(local.title,local.body);
+        localStorage.setItem(key,JSON.stringify({id:saved.id,revision:saved.revision,title:saved.title,content:saved.content}));
+        setCloudMessage('Prva kopija uspješno pohranjena u cloud.');return;
+      }
+      if(!checkpoint){setCloudMessage('Cloud već sadrži rukopis. Nije prepisan ni lokalni ni udaljeni tekst. Izvezi lokalni .md i ručno uskladi verzije.');return;}
+      if(checkpoint.id!==remote.id||checkpoint.revision!==remote.revision||checkpoint.title!==remote.title||checkpoint.content!==remote.content){setCloudMessage('KONFLIKT: cloud je promijenjen. Lokalni rukopis je sačuvan; nema automatskog prepisivanja.');return;}
+      if(checkpoint.title===local.title&&checkpoint.content===local.body){setCloudMessage('Lokalni i cloud rukopis su usklađeni.');return;}
+      const saved=await updateRemote(remote,local.title,local.body);
+      localStorage.setItem(key,JSON.stringify({id:saved.id,revision:saved.revision,title:saved.title,content:saved.content}));
+      setCloudMessage('Nova verzija uspješno sinhronizovana.');
+    }catch(e){setCloudMessage('Sinhronizacija nije uspjela. Lokalni tekst ostaje sačuvan. '+String(e));}finally{setCloudBusy(false);}
+  }
   async function toggleHistory(){if(showHistory){setShowHistory(false);return;}
     try{setRevisions(await listRevisions());setShowHistory(true);}catch(e){setError(String(e));changeStatus('greška');}
   }
@@ -106,7 +134,18 @@ export default function Story(){
   return <section className="story-editor">
     <div className="eyebrow">STORY / MANUSCRIPT · RADNO / NON-AUTHORITY</div>
     <h1>Knjiga I</h1>
-    <p className="muted">Rukopis je odvojen od kanona. Trenutno se čuva samo na ovom uređaju u IndexedDB; serverska sinhronizacija je opcionalna i zahtijeva zasebnu prijavu.</p>
+    <p className="muted">Rukopis je odvojen od kanona. Lokalni autosave u IndexedDB je uvijek aktivan; privatna cloud kopija je opcionalna i zahtijeva prijavu.</p>
+    {cloudConfigured&&<div className="panel">
+      <h2>Supabase · privatna cloud kopija</h2>
+      <p className="muted">Offline pisanje ostaje lokalno. Sinhronizacija se pokreće ručno i nikada ne prepisuje različite verzije automatski.</p>
+      {!cloudUser?<div className="story-toolbar">
+        <input type="email" aria-label="E-mail za Supabase" placeholder="E-mail" value={email} onChange={e=>setEmail(e.target.value)}/>
+        <input type="password" aria-label="Supabase lozinka" placeholder="Lozinka" value={password} onChange={e=>setPassword(e.target.value)}/>
+        <button type="button" disabled={cloudBusy||!email||!password} onClick={()=>void cloudLogin(false)}>Prijava</button>
+        <button type="button" disabled={cloudBusy||!email||password.length<8} onClick={()=>void cloudLogin(true)}>Napravi račun</button>
+      </div>:<div className="story-toolbar"><span>{cloudUser.email||'Prijavljen korisnik'}</span><button type="button" disabled={cloudBusy||status!=='lokalno sačuvano'} onClick={()=>void cloudSync()}>Sinhronizuj u cloud</button><button type="button" disabled={cloudBusy} onClick={()=>void signOut().then(()=>{setCloudUser(null);setCloudMessage('Odjavljen.');})}>Odjava</button></div>}
+      {cloudMessage&&<p role="status">{cloudMessage}</p>}
+    </div>}
     {cloudSyncEnabled&&<div className="panel">
       <h2>Serverska pohrana · zaseban API</h2>
       <p className="muted">Status: {serverStatus}. Lokalni IndexedDB ostaje zasebna sigurnosna kopija za oporavak; sinhronizacija je ručna.</p>
