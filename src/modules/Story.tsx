@@ -2,7 +2,7 @@ import {useEffect,useRef,useState} from 'react';
 import {initialManuscript,listRevisions,loadManuscript,saveManuscript,loadSyncCheckpoint,saveSyncCheckpoint} from '../lib/manuscriptStore';
 import {storyApi,StoryApiError} from '../lib/storyApi';
 import {createOperationId} from '../lib/operationId';
-import {cloudConfigured,currentUser,signIn,signUp,signOut,getRemote,createRemote,updateRemote} from '../lib/supabaseStory';
+import {cloudConfigured,currentUser,signIn,signUp,resetPassword,signOut,getRemote,createRemote,updateRemote} from '../lib/supabaseStory';
 import type {ManuscriptRevision} from '../lib/manuscriptStore';
 type SaveState='učitavanje'|'lokalno sačuvano'|'nespremljene izmjene'|'spremanje'|'greška';
 function downloadMarkdown(title:string,body:string){
@@ -21,6 +21,7 @@ export default function Story(){
   const [showHistory,setShowHistory]=useState(false);
   const cloudSyncEnabled=import.meta.env.VITE_STORY_API_ENABLED==='true';
   const [password,setPassword]=useState('');
+  const [showPassword,setShowPassword]=useState(false);
   const [email,setEmail]=useState('');
   const [cloudUser,setCloudUser]=useState(currentUser());
   const [cloudBusy,setCloudBusy]=useState(false);
@@ -100,6 +101,7 @@ export default function Story(){
     }
   }
   async function cloudLogin(register:boolean){setCloudBusy(true);setCloudMessage('');try{if(register){const active=await signUp(email,password);setCloudMessage(active?'Račun kreiran i prijavljen.':'Provjeri e-mail i potvrdi račun prije prijave.');}else{await signIn(email,password);setCloudMessage('Prijava uspješna.');}setCloudUser(currentUser());setPassword('');}catch(e){setCloudMessage(String(e));}finally{setCloudBusy(false);}}
+  async function cloudReset(){if(!email.trim()){setCloudMessage('Prvo upiši e-mail adresu.');return;}setCloudBusy(true);setCloudMessage('');try{await resetPassword(email.trim());setCloudMessage('Ako je račun registrovan, stići će poruka za postavljanje nove lozinke. Provjeri i Spam.');}catch(e){setCloudMessage('Resetovanje nije uspjelo: '+String(e));}finally{setCloudBusy(false);}}
   async function cloudSync(){
     if(!ready||status!=='lokalno sačuvano'){setCloudMessage('Prvo spremi lokalni tekst.');return;}
     setCloudBusy(true);setCloudMessage('Provjeravam cloud verziju…');
@@ -140,9 +142,11 @@ export default function Story(){
       <p className="muted">Offline pisanje ostaje lokalno. Sinhronizacija se pokreće ručno i nikada ne prepisuje različite verzije automatski.</p>
       {!cloudUser?<div className="story-toolbar">
         <input type="email" aria-label="E-mail za Supabase" placeholder="E-mail" value={email} onChange={e=>setEmail(e.target.value)}/>
-        <input type="password" aria-label="Supabase lozinka" placeholder="Lozinka" value={password} onChange={e=>setPassword(e.target.value)}/>
+        <input type={showPassword?"text":"password"} autoComplete="current-password" aria-label="Supabase lozinka" placeholder="Lozinka" value={password} onChange={e=>setPassword(e.target.value)}/>
+        <button type="button" aria-pressed={showPassword} onClick={()=>setShowPassword(value=>!value)}>{showPassword?"Sakrij lozinku":"Prikaži lozinku"}</button>
         <button type="button" disabled={cloudBusy||!email||!password} onClick={()=>void cloudLogin(false)}>Prijava</button>
         <button type="button" disabled={cloudBusy||!email||password.length<8} onClick={()=>void cloudLogin(true)}>Napravi račun</button>
+        <button type="button" disabled={cloudBusy||!email.trim()} onClick={()=>void cloudReset()}>Zaboravljena lozinka</button>
       </div>:<div className="story-toolbar"><span>{cloudUser.email||'Prijavljen korisnik'}</span><button type="button" disabled={cloudBusy||status!=='lokalno sačuvano'} onClick={()=>void cloudSync()}>Sinhronizuj u cloud</button><button type="button" disabled={cloudBusy} onClick={()=>void signOut().then(()=>{setCloudUser(null);setCloudMessage('Odjavljen.');})}>Odjava</button></div>}
       {cloudMessage&&<p role="status">{cloudMessage}</p>}
     </div>}
