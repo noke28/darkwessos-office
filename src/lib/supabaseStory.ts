@@ -19,6 +19,7 @@ async function request(path:string,method:string,body?:unknown,token?:string):Pr
 function acceptAuth(data:any){if(!data?.access_token||!data?.refresh_token||!data?.user?.id)throw new Error('Prijava nije potvrđena. Provjeri e-mail.');store({access_token:data.access_token,refresh_token:data.refresh_token,expires_at:Date.now()+(data.expires_in||3600)*1000,user:{id:data.user.id,email:data.user.email}});}
 export async function signIn(email:string,password:string){acceptAuth(await request('/auth/v1/token?grant_type=password','POST',{email,password}));}
 export async function signUp(email:string,password:string){const result=await request('/auth/v1/signup','POST',{email,password});if(result.access_token)acceptAuth(result);return Boolean(result.access_token);}
+export async function resetPassword(email:string){await request('/auth/v1/recover','POST',{email});}
 export async function signOut(){const token=session?.access_token;store(null);if(token)await request('/auth/v1/logout','POST',undefined,token).catch(()=>{});}
 async function accessToken(){if(!session)throw new Error('Prvo se prijavi.');if(session.expires_at>Date.now()+60000)return session.access_token;
  const result=await request('/auth/v1/token?grant_type=refresh_token','POST',{refresh_token:session.refresh_token});acceptAuth(result);return session!.access_token;}
