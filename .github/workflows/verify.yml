@@ -1,7 +1,7 @@
 name: Verify DARKWESSOS Office
 on:
   push:
-    branches: [main, task09-office]
+    branches: [main, task09-office, task10-supabase]
   pull_request:
   workflow_dispatch:
 jobs:
