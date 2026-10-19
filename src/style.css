@@ -5,3 +5,35 @@
 
 /* TASK 06A-1: offline STORY editor */
 .story-toolbar{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin:24px 0}.story-toolbar span{margin-right:auto;font-size:12px;color:#d5b77a}.story-toolbar button,.story-revision button{border:1px solid #607669;border-radius:7px;padding:10px 13px;background:#253b36;color:#e6e8e1}.story-label{display:block;margin:17px 0 7px;font-size:12px;color:#c7d0c8}.story-title,.story-body{width:100%;border:1px solid #43594e;border-radius:8px;background:#132027;color:#e9e7da;padding:15px;outline-offset:2px}.story-title{font:25px Georgia,serif}.story-body{min-height:52vh;resize:vertical;font:17px/1.75 Georgia,serif;white-space:pre-wrap}.story-revision{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 0;border-bottom:1px solid #34463f;font-size:12px}.story-history{max-height:300px;overflow:auto}@media(max-width:740px){.story-toolbar button{min-height:44px}.story-body{min-height:58vh;font-size:16px}.story-revision{flex-wrap:wrap}}
+
+
+/* DARKWESSOS · NORDISH MIDNIGHT BLUE — Android-first visual theme */
+:root{background:#0B1526;color:#E8EEF2}
+body{background:#0B1526;color:#E8EEF2}
+.sidebar{background:#0c1b2f;border-right-color:#294560}
+.sidebar nav button{color:#b9d0e1}
+.sidebar nav button.active,.sidebar nav button:hover{background:#183551;color:#D6A65C}
+.brand-icon,.eyebrow,.tag,.secondary-link{color:#D6A65C}
+.brand small,.side-foot,.muted{color:#a7bcd0}
+.workspace{background:#0B1526}
+.topbar{border-bottom-color:#294560;background:#0c1b2f}
+.wordmark span,.status{color:#88C0D0}
+.tiles button,.panel{background:#142840;border-color:#34536e;color:#E8EEF2}
+.tiles button:hover{border-color:#D6A65C}
+.tiles button span{color:#D6A65C}
+.tiles button small{color:#a7bcd0}
+.lead{color:#b9cee1}
+.source-button{color:#E8EEF2;border-bottom-color:#34536e}
+.context{background:#142840;border-left-color:#D6A65C}
+.form input,.form textarea,.story-title,.story-body{background:#0c1b2f;color:#E8EEF2;border-color:#34536e}
+.form label{color:#c5d6e6}
+.form button,section>button,.place button,.source-layout .panel button:not(.source-button){background:#D6A65C;border-color:#D6A65C;color:#0B1526}
+.story-toolbar button,.story-revision button{background:#193751;border-color:#456984;color:#E8EEF2}
+.story-toolbar span{color:#D6A65C}
+.story-label{color:#c5d6e6}
+.story-revision{border-bottom-color:#34536e}
+footer{border-top-color:#294560;color:#a7bcd0}
+.bottom-nav{background:#0c1b2f;border-top-color:#34536e}
+.bottom-nav button{color:#b9cee1}
+.bottom-nav button.active{color:#D6A65C;border-top-color:#D6A65C}
+@media(max-width:740px){main{padding:16px 12px 100px}.topbar{height:54px}.bottom-nav button{min-height:52px;padding:12px 2px}}
