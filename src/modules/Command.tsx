@@ -1,40 +1,81 @@
 import {useState} from 'react';
 
-const sections=[
- {id:'command',number:'01',title:'COMMAND',subtitle:'Odluke, zadaci i aktivni radni tok.',icon:'✦',art:'linear-gradient(160deg,rgba(6,15,29,.1),rgba(5,12,24,.95)),radial-gradient(ellipse at 25% 20%,#a36c30 0%,#293e51 35%,#081a32 85%)'},
- {id:'story',number:'02',title:'STORY',subtitle:'Rukopis, scene, poglavlja i bilješke.',icon:'✒',art:'linear-gradient(160deg,rgba(5,12,24,.12),rgba(5,12,24,.96)),radial-gradient(ellipse at 70% 10%,#bb8752 0%,#34465b 38%,#07182d 90%)'},
- {id:'workshop',number:'03',title:'WORKSHOP',subtitle:'Atlas, lokacije, odnosi i tok radnje.',icon:'✧',art:'linear-gradient(160deg,rgba(6,15,29,.05),rgba(5,12,24,.96)),radial-gradient(ellipse at 35% 20%,#517a9e 0%,#1b4965 35%,#071529 85%)'},
- {id:'kate',number:'04',title:'KATE LAB',subtitle:'Urednički rad, istraživanje i provjera izvora.',icon:'❧',art:'linear-gradient(160deg,rgba(5,12,24,.06),rgba(5,12,24,.95)),radial-gradient(ellipse at 75% 15%,#b37c42 0%,#263f59 42%,#07162a 88%)'}
+const modules=[
+ {key:'command',name:'COMMAND',icon:'▤',desc:'Odluke i zadaci',kind:'01'},
+ {key:'story',name:'STORY',icon:'▥',desc:'Rukopis i scene',kind:'02'},
+ {key:'workshop',name:'WORKSHOP',icon:'✧',desc:'Atlas i odnosi',kind:'03'},
+ {key:'kate',name:'KATE LAB',icon:'✒',desc:'Urednička radionica',kind:'04'}
+] as const;
+const menu=[
+ {name:'DARKWOOD',icon:'⌂',key:'command'},
+ {name:'STORY',icon:'▥',key:'story'},
+ {name:'WORKSHOP',icon:'✧',key:'workshop'},
+ {name:'KATE LAB',icon:'✒',key:'kate'},
+ {name:'ARCHIVE',icon:'▤',key:'archive'},
+ {name:'Kanon',icon:'◇',key:'archive'},
+ {name:'Likovi',icon:'♙',key:'workshop'},
+ {name:'Geografija',icon:'△',key:'workshop'},
+ {name:'Zadaci',icon:'☑',key:'notes'},
+ {name:'Ideje',icon:'✎',key:'notes'}
 ] as const;
 export default function Command({go}:{go:(s:string)=>void}){
  const [lab,setLab]=useState(false);
- return <section className="nordish-home">
+ const [note,setNote]=useState(()=>{try{return localStorage.getItem('darkwessos:quick-note')??''}catch{return ''}});
+ const [saved,setSaved]=useState(false);
+ const open=(key:string)=>{if(key==='kate'){setLab(v=>!v);return;}go(key)};
+ const save=()=>{try{localStorage.setItem('darkwessos:quick-note',note);setSaved(true)}catch{setSaved(false)}};
+ return <section className="dw-dashboard">
  <style>{`
- .nordish-home{color:#e8eef2;font-family:system-ui,sans-serif;max-width:1200px;margin:auto}
- .nordish-hero{border:1px solid #31516d;border-radius:12px;padding:22px 18px;margin-bottom:14px;background:radial-gradient(ellipse at 78% 5%,#27547b 0%,transparent 53%),linear-gradient(135deg,#0B1526,#142840 60%,#0B1526);box-shadow:0 12px 40px #02081370}
- .nordish-hero h1{font-family:Georgia,serif;font-size:clamp(2rem,5vw,3.5rem);font-weight:400;letter-spacing:.045em;margin:10px 0 0;color:#f2eadc}
- .nordish-hero .nordish-tag{color:#88C0D0;font-size:.75rem;letter-spacing:.25em}
- .nordish-hero p{color:#c2d2e2;margin:12px 0 0;font-family:Georgia,serif;font-style:italic}
- .nordish-compass{font-size:2rem;color:#D6A65C;vertical-align:middle;margin-right:12px}
- .nordish-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
- .nordish-tile{position:relative;text-align:left;border:1px solid #52708a;border-radius:14px;padding:16px;min-height:205px;color:#f4ede1;cursor:pointer;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;transition:border-color .2s,transform .2s}
- .nordish-tile:hover,.nordish-tile:focus-visible{border-color:#e0b477;transform:translateY(-2px);outline:2px solid transparent}
- .nordish-tile:focus-visible{outline:2px solid #a8d7ec;outline-offset:3px}
- .nordish-num{color:#D6A65C;font-family:Georgia,serif;letter-spacing:.1em}
- .nordish-tile h2{font-family:Georgia,serif;font-weight:400;font-size:clamp(1.5rem,3vw,2.1rem);margin:0 0 6px}
- .nordish-tile p{color:#d1deea;line-height:1.5;margin:0;max-width:34ch}
- .nordish-icon{font-size:2.4rem;color:#D6A65C}
- .nordish-arrow{position:absolute;right:18px;bottom:18px;color:#e5b977;font-size:1.5rem}
- .nordish-bottom{margin-top:16px;border:1px solid #28455d;background:#0a1c30;border-radius:9px;padding:12px;color:#b7cbdb;display:flex;flex-wrap:wrap;gap:14px;justify-content:space-between}
- .nordish-bottom button,.nordish-lab button{background:#193b57;color:#e8eef2;border:1px solid #4b728e;border-radius:8px;padding:10px 14px;cursor:pointer}
- .nordish-lab{border:1px solid #b18a55;background:#0c1d30;border-radius:14px;padding:20px;margin-top:16px}
- .nordish-lab h2{font-family:Georgia,serif;font-weight:400;color:#ebd3a6}
- .nordish-lab p{color:#c2d2e2;line-height:1.6}
- @media(max-width:560px){.nordish-home{width:100%}.nordish-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.nordish-tile{min-height:162px;padding:12px;border-radius:9px}.nordish-tile h2{font-size:clamp(.97rem,4vw,1.3rem);letter-spacing:0}.nordish-tile p{font-size:.72rem;line-height:1.35;padding-right:8px}.nordish-icon{font-size:1.5rem}.nordish-arrow{font-size:1rem;right:9px;bottom:8px}.nordish-num{font-size:.72rem}.nordish-hero{padding:15px 12px;border-radius:9px;margin-bottom:11px}.nordish-hero h1{font-size:clamp(1.5rem,6vw,2.2rem)}.nordish-hero p{font-size:.82rem}.nordish-hero .nordish-tag{font-size:.58rem;letter-spacing:.13em}.nordish-compass{font-size:1.4rem;margin-right:6px}.nordish-bottom{flex-direction:column;gap:8px;font-size:.75rem;padding:10px}.nordish-lab{padding:12px}.nordish-lab button{margin:4px 3px 4px 0;min-height:44px}}
+ .dw-dashboard{--night:#0B1526;--fjord:#142840;--ice:#88C0D0;--gold:#D6A65C;color:#E8EEF2;max-width:1250px;margin:0 auto;font-family:system-ui,sans-serif}
+ .dw-dashboard button{font:inherit;cursor:pointer}
+ .dw-header{display:flex;align-items:center;gap:12px;padding:15px;border:1px solid #294560;border-radius:12px;background:linear-gradient(110deg,#0B1526,#173451 75%,#0B1526);margin-bottom:12px}
+ .dw-compass{display:grid;place-items:center;flex-shrink:0;width:58px;height:58px;border:3px solid #D6A65C;border-radius:50%;background:radial-gradient(circle,#f0e0b6,#b78a4a);color:#142840;font-size:33px;box-shadow:0 0 0 3px #0b1728 inset}
+ .dw-header h1{font:normal clamp(1.4rem,4vw,2.6rem) Georgia,serif;letter-spacing:.06em;margin:0;color:#F4EADC}
+ .dw-header p{margin:4px 0 0;font-size:.68rem;letter-spacing:.19em;color:#88C0D0}
+ .dw-layout{display:grid;grid-template-columns:190px minmax(0,1fr);gap:12px}
+ .dw-menu{background:#0a1b30;border:1px solid #294560;border-radius:11px;padding:8px;display:flex;flex-direction:column;gap:3px;align-self:stretch}
+ .dw-menu button{width:100%;display:flex;gap:9px;align-items:center;text-align:left;color:#c2d8ea;background:transparent;border:0;border-radius:7px;padding:11px 8px;font-size:.83rem;min-height:42px}
+ .dw-menu button span{font-size:1.15rem;min-width:22px;text-align:center}
+ .dw-menu button:first-child,.dw-menu button:hover,.dw-menu button:focus-visible{color:#D6A65C;background:#1a3046}
+ .dw-menu button:first-child{border-left:3px solid #D6A65C}
+ .dw-main{min-width:0}
+ .dw-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ .dw-card{position:relative;display:flex;flex-direction:column;justify-content:space-between;text-align:left;min-width:0;min-height:165px;padding:14px;border:1px solid #3a5b79;border-radius:10px;color:#f2eadb;background:linear-gradient(145deg,#1b3956,#0b1b2f 65%,#071321)}
+ .dw-card:nth-child(2){background:linear-gradient(145deg,#3a3540,#142840 55%,#081625)}
+ .dw-card:nth-child(3){background:linear-gradient(145deg,#224763,#10243b 55%,#081625)}
+ .dw-card:nth-child(4){background:linear-gradient(145deg,#3d3440,#15283d 55%,#081625)}
+ .dw-card:focus-visible,.dw-card:hover{outline:2px solid #D6A65C;outline-offset:1px}
+ .dw-card .dw-number{font:normal .78rem Georgia,serif;color:#D6A65C}
+ .dw-card .dw-icon{font-size:1.65rem;color:#D6A65C;line-height:1}
+ .dw-card h2{font:normal clamp(1rem,2vw,1.4rem) Georgia,serif;margin:8px 0 4px;color:#F4EADC}
+ .dw-card p{font-size:.77rem;color:#c4d7e7;line-height:1.35;margin:0;padding-right:12px}
+ .dw-card .dw-next{position:absolute;right:12px;bottom:12px;color:#D6A65C}
+ .dw-panels{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+ .dw-panel{border:1px solid #294560;background:#0b1c30;border-radius:10px;padding:12px;min-width:0}
+ .dw-panel h3{font:normal .78rem Georgia,serif;letter-spacing:.05em;color:#D6A65C;margin:0 0 9px}
+ .dw-panel p{font-size:.78rem;line-height:1.5;color:#b9cede;margin:0}
+ .dw-panel strong{font-size:.95rem;font-weight:600;color:#e8eef2}
+ .dw-panel button{margin-top:8px;border:1px solid #496d88;background:#152f48;color:#dcebf5;border-radius:7px;padding:9px 11px;font-size:.77rem;min-height:40px}
+ .dw-panel textarea{width:100%;background:#091624;color:#e8eef2;border:1px solid #3a5874;border-radius:7px;resize:vertical;min-height:65px;padding:9px;font-size:.82rem}
+ .dw-panel.wide{grid-column:1/-1}
+ .dw-lab{margin-top:10px;border-color:#947449}
+ .dw-lab p{margin-bottom:8px}
+ .dw-actions{display:flex;gap:8px;flex-wrap:wrap}
+ .dw-save{display:flex;align-items:center;gap:9px;flex-wrap:wrap}
+ .dw-save span{font-size:.7rem;color:#88C0D0}
+ @media(max-width:740px){.dw-header{padding:10px;gap:9px}.dw-compass{width:45px;height:45px;font-size:25px;border-width:2px}.dw-header h1{font-size:clamp(1.15rem,5vw,1.7rem)}.dw-header p{font-size:.55rem;letter-spacing:.09em}.dw-layout{grid-template-columns:93px minmax(0,1fr);gap:7px}.dw-menu{padding:4px;gap:1px}.dw-menu button{min-height:41px;padding:7px 3px;font-size:.61rem;gap:3px;letter-spacing:-.01em}.dw-menu button span{font-size:1rem;min-width:18px}.dw-cards{gap:7px}.dw-card{min-height:140px;padding:9px;border-radius:8px}.dw-card .dw-icon{font-size:1.35rem}.dw-card h2{font-size:clamp(.78rem,3.4vw,1.02rem);margin:6px 0 3px}.dw-card p{font-size:.64rem;padding-right:0}.dw-card .dw-next{right:6px;bottom:5px;font-size:.75rem}.dw-panels{grid-template-columns:1fr;gap:7px;margin-top:7px}.dw-panel{padding:10px}.dw-panel.wide{grid-column:auto}}
+ @media(max-width:370px){.dw-layout{grid-template-columns:76px minmax(0,1fr)}.dw-menu button{font-size:.53rem}.dw-menu button span{min-width:14px;font-size:.85rem}.dw-card{min-height:132px;padding:7px}.dw-card p{font-size:.59rem}}
  `}</style>
- <div className="nordish-hero"><div><span className="nordish-compass" aria-hidden="true">✺</span><span className="nordish-tag">LIVING STORY OFFICE</span></div><h1>DARKWESSOS</h1><p>Jedan svijet. Jedna pustolovina.</p></div>
- <div className="nordish-grid">{sections.map(s=><button type="button" key={s.id} className="nordish-tile" style={{background:s.art}} onClick={()=>s.id==='kate'?setLab(v=>!v):go(s.id)}><span className="nordish-num">{s.number}</span><div><div className="nordish-icon" aria-hidden="true">{s.icon}</div><h2>{s.title}</h2><p>{s.subtitle}</p></div><span className="nordish-arrow" aria-hidden="true">→</span></button>)}</div>
- {lab&&<div className="nordish-lab" role="region" aria-label="KATE LAB"><h2>KATE LAB · Urednička radionica</h2><p>Prostor za radne ideje i pripremu provjera. AI razgovor i provjera kanona nisu automatski povezani s ovim prototipom. Kanonske odluke donosi isključivo KENO.</p><button type="button" onClick={()=>go('notes')}>Otvori radne ideje →</button> <button type="button" onClick={()=>go('archive')}>Pregled izvora →</button> <button type="button" onClick={()=>setLab(false)}>Zatvori</button></div>}
- <div className="nordish-bottom"><span>✧ KENO · AUTOR &nbsp; | &nbsp; KATE · DEVELOPMENT EDITOR</span><button type="button" onClick={()=>go('archive')}>ARCHIVE · Kanon i izvori →</button></div>
- </section>;
+ <div className="dw-header"><div className="dw-compass" aria-label="Kompas">✧</div><div><h1>DARKWESSOS</h1><p>LIVING STORY OFFICE</p></div></div>
+ <div className="dw-layout">
+ <nav className="dw-menu" aria-label="DARKWESSOS izbornik">{menu.map(item=><button key={item.name} type="button" onClick={()=>open(item.key)}><span aria-hidden="true">{item.icon}</span>{item.name}</button>)}</nav>
+ <div className="dw-main">
+ <div className="dw-cards">{modules.map(m=><button key={m.key} className="dw-card" type="button" onClick={()=>open(m.key)}><span className="dw-number">{m.kind}</span><div><div className="dw-icon" aria-hidden="true">{m.icon}</div><h2>{m.name}</h2><p>{m.desc}</p></div><span className="dw-next" aria-hidden="true">↗</span></button>)}</div>
+ <div className="dw-panels">
+ <div className="dw-panel"><h3>AKTIVNA LOKACIJA</h3><strong>Darkwood</strong><p>Radni atlas i geografske veze.</p><button type="button" onClick={()=>go('workshop')}>Otvori atlas →</button></div>
+ <div className="dw-panel"><h3>AKTIVNI RAD</h3><strong>Novela I</strong><p>Rukopis i scene u razvoju.</p><button type="button" onClick={()=>go('story')}>Nastavi pisanje →</button></div>
+ <div className="dw-panel wide"><h3>BRZE ZABILJEŠKE</h3><textarea aria-label="Brze zabilješke" value={note} onChange={e=>{setNote(e.target.value);setSaved(false)}} placeholder="Ideja, pitanje ili scena..."/><div className="dw-save"><button type="button" onClick={save}>Sačuvaj lokalno</button>{saved&&<span>Sačuvano na ovom uređaju</span>}</div></div>
+ </div>
+ {lab&&<div className="dw-panel dw-lab" role="region" aria-label="KATE LAB"><h3>KATE LAB · UREDNIČKA RADIONICA</h3><p>Radne ideje, razvoj scena i pregled izvora. Ovaj prikaz nije direktno povezan s AI agentima. Kanon ostaje pod KENO kontrolom.</p><div className="dw-actions"><button type="button" onClick={()=>go('notes')}>Radne ideje</button><button type="button" onClick={()=>go('archive')}>Kanon i izvori</button><button type="button" onClick={()=>setLab(false)}>Zatvori</button></div></div>}
+ </div></div></section>;
 }
